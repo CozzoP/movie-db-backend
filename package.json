@@ -1,7 +1,7 @@
 {
-  "name": "auto-database-backend",
+  "name": "movie-database-backend",
   "version": "1.0.0",
-  "description": "Backend API per il database auto",
+  "description": "Backend API per il database movie",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
