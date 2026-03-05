@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Database Auto</title>
+  <title>Database Film</title>
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
   <style>
     :root {
@@ -51,7 +51,6 @@
       letter-spacing: 0.1em;
     }
 
-    /* TOOLBAR */
     .toolbar {
       display: flex;
       gap: 0.75rem;
@@ -102,34 +101,18 @@
       white-space: nowrap;
     }
 
-    .btn-primary {
-      background: var(--accent);
-      color: #000;
-    }
+    .btn-primary { background: var(--accent); color: #000; }
     .btn-primary:hover { filter: brightness(1.1); transform: translateY(-1px); }
 
-    .btn-danger {
-      background: transparent;
-      color: var(--accent2);
-      border: 1px solid var(--accent2);
-    }
-    .btn-danger:hover { background: var(--accent2); color: #fff; }
-
-    /* TABLE */
     .table-wrap {
       border: 1px solid var(--border);
       border-radius: 10px;
       overflow: hidden;
     }
 
-    table {
-      width: 100%;
-      border-collapse: collapse;
-    }
+    table { width: 100%; border-collapse: collapse; }
 
-    thead {
-      background: var(--surface);
-    }
+    thead { background: var(--surface); }
 
     th {
       text-align: left;
@@ -158,6 +141,26 @@
       border-radius: 4px;
       font-family: monospace;
     }
+
+    .genere-badge {
+      display: inline-block;
+      background: rgba(232,255,71,0.1);
+      color: var(--accent);
+      font-size: 0.72rem;
+      padding: 0.2rem 0.6rem;
+      border-radius: 20px;
+      border: 1px solid rgba(232,255,71,0.25);
+      letter-spacing: 0.05em;
+    }
+
+    .voto {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      font-weight: 500;
+    }
+
+    .voto-stars { color: var(--accent); font-size: 0.8rem; }
 
     .btn-row {
       background: transparent;
@@ -190,7 +193,7 @@
       border-radius: 12px;
       padding: 2rem;
       width: 100%;
-      max-width: 420px;
+      max-width: 440px;
       animation: slideUp 0.2s ease;
     }
 
@@ -215,7 +218,7 @@
       color: var(--muted);
       margin-bottom: 0.4rem;
     }
-    .field input {
+    .field input, .field select {
       width: 100%;
       background: var(--bg);
       border: 1px solid var(--border);
@@ -227,7 +230,39 @@
       outline: none;
       transition: border-color 0.2s;
     }
-    .field input:focus { border-color: var(--accent); }
+    .field select option { background: var(--bg); }
+    .field input:focus, .field select:focus { border-color: var(--accent); }
+
+    .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+
+    /* Star rating */
+    .star-rating {
+      display: flex;
+      gap: 0.3rem;
+      margin-top: 0.4rem;
+    }
+
+    .star-rating input { display: none; }
+
+    .star-rating label {
+      font-size: 1.6rem;
+      color: var(--border);
+      cursor: pointer;
+      transition: color 0.1s;
+      margin: 0;
+      padding: 0;
+      text-transform: none;
+      letter-spacing: 0;
+    }
+
+    .star-rating input:checked ~ label,
+    .star-rating label:hover,
+    .star-rating label:hover ~ label { color: var(--accent); }
+
+    .star-rating { flex-direction: row-reverse; justify-content: flex-end; }
+    .star-rating label:hover,
+    .star-rating label:hover ~ label { color: var(--accent); }
+    .star-rating input:checked ~ label { color: var(--accent); }
 
     .modal-footer {
       display: flex;
@@ -277,7 +312,6 @@
       color: var(--muted);
     }
 
-    /* config banner */
     .config-banner {
       background: rgba(232,255,71,0.08);
       border: 1px solid rgba(232,255,71,0.3);
@@ -307,8 +341,8 @@
 <body>
 
 <header>
-  <h1>DATABASE <span>AUTO</span></h1>
-  <div class="counter" id="counter">— veicoli</div>
+  <h1>DATABASE <span>FILM</span></h1>
+  <div class="counter" id="counter">— film</div>
 </header>
 
 <div class="config-banner">
@@ -322,7 +356,7 @@
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
       <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
     </svg>
-    <input type="text" id="cerca" placeholder="Cerca per marca o modello…" oninput="cercaAuto()">
+    <input type="text" id="cerca" placeholder="Cerca per titolo o genere…" oninput="cercaFilm()">
   </div>
   <button class="btn btn-primary" onclick="openModal()">+ Aggiungi</button>
 </div>
@@ -332,13 +366,15 @@
     <thead>
       <tr>
         <th>ID</th>
-        <th>Marca</th>
-        <th>Modello</th>
+        <th>Titolo</th>
+        <th>Anno</th>
+        <th>Genere</th>
+        <th>Voto</th>
         <th></th>
       </tr>
     </thead>
     <tbody id="tbody">
-      <tr><td colspan="4" class="empty">Caricamento…</td></tr>
+      <tr><td colspan="6" class="empty">Caricamento…</td></tr>
     </tbody>
   </table>
 </div>
@@ -346,18 +382,44 @@
 <!-- MODAL -->
 <div class="overlay" id="overlay" onclick="closeModal(event)">
   <div class="modal">
-    <h2>Nuova Auto</h2>
+    <h2>Nuovo Film</h2>
     <div class="field">
-      <label>Marca</label>
-      <input type="text" id="inputMarca" placeholder="es. Toyota">
+      <label>Titolo</label>
+      <input type="text" id="inputTitolo" placeholder="es. Inception">
+    </div>
+    <div class="field-row">
+      <div class="field">
+        <label>Anno di uscita</label>
+        <input type="number" id="inputAnno" placeholder="es. 2010" min="1888" max="2099">
+      </div>
+      <div class="field">
+        <label>Genere</label>
+        <select id="inputGenere">
+          <option value="">— seleziona —</option>
+          <option>Azione</option>
+          <option>Animazione</option>
+          <option>Avventura</option>
+          <option>Biografico</option>
+          <option>Commedia</option>
+          <option>Documentario</option>
+          <option>Drammatico</option>
+          <option>Fantascienza</option>
+          <option>Fantasy</option>
+          <option>Horror</option>
+          <option>Musical</option>
+          <option>Romance</option>
+          <option>Thriller</option>
+          <option>Western</option>
+        </select>
+      </div>
     </div>
     <div class="field">
-      <label>Modello</label>
-      <input type="text" id="inputModello" placeholder="es. Corolla">
+      <label>Voto (1–10)</label>
+      <input type="number" id="inputVoto" placeholder="es. 8" min="1" max="10">
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="closeModal()">Annulla</button>
-      <button class="btn btn-primary" onclick="aggiungiAuto()">Aggiungi</button>
+      <button class="btn btn-primary" onclick="aggiungiFilm()">Aggiungi</button>
     </div>
   </div>
 </div>
@@ -365,14 +427,14 @@
 <div class="toast-container" id="toasts"></div>
 
 <script>
-  let API = localStorage.getItem('autoApiUrl') || 'http://localhost:3000';
+  let API = localStorage.getItem('filmApiUrl') || 'http://localhost:3000';
   document.getElementById('apiUrl').value = API;
 
   function saveApiUrl() {
     API = document.getElementById('apiUrl').value.replace(/\/$/, '');
-    localStorage.setItem('autoApiUrl', API);
+    localStorage.setItem('filmApiUrl', API);
     toast('URL API salvato!');
-    caricaAuto();
+    caricaFilm();
   }
 
   function toast(msg, err = false) {
@@ -383,34 +445,45 @@
     setTimeout(() => el.remove(), 3000);
   }
 
-  async function caricaAuto(query = '') {
+  function stelline(voto) {
+    if (!voto) return '—';
+    const pieno = Math.round(voto / 2);
+    return '★'.repeat(pieno) + '☆'.repeat(5 - pieno);
+  }
+
+  async function caricaFilm(query = '') {
     const url = query
-      ? `${API}/api/auto/cerca?q=${encodeURIComponent(query)}`
-      : `${API}/api/auto`;
+      ? `${API}/api/film/cerca?q=${encodeURIComponent(query)}`
+      : `${API}/api/film`;
     try {
       const res = await fetch(url);
       const data = await res.json();
       renderTable(data);
     } catch {
       document.getElementById('tbody').innerHTML =
-        '<tr><td colspan="4" class="empty">Impossibile connettersi al backend. Imposta l\'URL API corretto.</td></tr>';
+        '<tr><td colspan="6" class="empty">Impossibile connettersi al backend. Imposta l\'URL API corretto.</td></tr>';
     }
   }
 
-  function renderTable(auto) {
-    document.getElementById('counter').textContent = `${auto.length} veicol${auto.length === 1 ? 'o' : 'i'}`;
-    if (!auto.length) {
+  function renderTable(film) {
+    document.getElementById('counter').textContent = `${film.length} film`;
+    if (!film.length) {
       document.getElementById('tbody').innerHTML =
-        '<tr><td colspan="4" class="empty">Nessuna auto trovata.</td></tr>';
+        '<tr><td colspan="6" class="empty">Nessun film trovato.</td></tr>';
       return;
     }
-    document.getElementById('tbody').innerHTML = auto.map(a => `
+    document.getElementById('tbody').innerHTML = film.map(f => `
       <tr>
-        <td><span class="id-badge">#${a.id}</span></td>
-        <td>${a.marca}</td>
-        <td>${a.modello}</td>
+        <td><span class="id-badge">#${f.id}</span></td>
+        <td><strong>${f.titolo}</strong></td>
+        <td>${f.anno || '—'}</td>
+        <td>${f.genere ? `<span class="genere-badge">${f.genere}</span>` : '—'}</td>
+        <td><span class="voto" title="${f.voto}/10">
+          <span class="voto-stars">${stelline(f.voto)}</span>
+          <span style="color:var(--muted);font-size:0.8rem">${f.voto ? f.voto + '/10' : '—'}</span>
+        </span></td>
         <td>
-          <button class="btn-row" onclick="rimuoviAuto(${a.id}, '${a.marca} ${a.modello}')" title="Rimuovi">
+          <button class="btn-row" onclick="rimuoviFilm(${f.id}, '${f.titolo.replace(/'/g, "\\'")}')" title="Rimuovi">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/>
             </svg>
@@ -421,43 +494,48 @@
   }
 
   let cercaTimeout;
-  function cercaAuto() {
+  function cercaFilm() {
     clearTimeout(cercaTimeout);
-    cercaTimeout = setTimeout(() => caricaAuto(document.getElementById('cerca').value), 300);
+    cercaTimeout = setTimeout(() => caricaFilm(document.getElementById('cerca').value), 300);
   }
 
-  async function aggiungiAuto() {
-    const marca = document.getElementById('inputMarca').value.trim();
-    const modello = document.getElementById('inputModello').value.trim();
-    if (!marca || !modello) return toast('Compila tutti i campi.', true);
+  async function aggiungiFilm() {
+    const titolo  = document.getElementById('inputTitolo').value.trim();
+    const anno    = document.getElementById('inputAnno').value;
+    const genere  = document.getElementById('inputGenere').value;
+    const voto    = document.getElementById('inputVoto').value;
+
+    if (!titolo) return toast('Il titolo è obbligatorio.', true);
+    if (voto && (voto < 1 || voto > 10)) return toast('Il voto deve essere tra 1 e 10.', true);
+
     try {
-      const res = await fetch(`${API}/api/auto`, {
+      const res = await fetch(`${API}/api/film`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ marca, modello })
+        body: JSON.stringify({ titolo, anno: anno || null, genere: genere || null, voto: voto || null })
       });
       if (!res.ok) throw new Error();
       closeModal();
-      toast(`${marca} ${modello} aggiunto!`);
-      caricaAuto();
+      toast(`"${titolo}" aggiunto!`);
+      caricaFilm();
     } catch { toast('Errore durante l\'aggiunta.', true); }
   }
 
-  async function rimuoviAuto(id, nome) {
-    if (!confirm(`Rimuovere "${nome}"?`)) return;
+  async function rimuoviFilm(id, titolo) {
+    if (!confirm(`Rimuovere "${titolo}"?`)) return;
     try {
-      const res = await fetch(`${API}/api/auto/${id}`, { method: 'DELETE' });
+      const res = await fetch(`${API}/api/film/${id}`, { method: 'DELETE' });
       if (!res.ok) throw new Error();
-      toast(`${nome} rimosso.`);
-      caricaAuto();
+      toast(`"${titolo}" rimosso.`);
+      caricaFilm();
     } catch { toast('Errore durante la rimozione.', true); }
   }
 
   function openModal() {
-    document.getElementById('inputMarca').value = '';
-    document.getElementById('inputModello').value = '';
+    ['inputTitolo','inputAnno','inputVoto'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('inputGenere').value = '';
     document.getElementById('overlay').classList.add('open');
-    document.getElementById('inputMarca').focus();
+    document.getElementById('inputTitolo').focus();
   }
 
   function closeModal(e) {
@@ -465,7 +543,7 @@
       document.getElementById('overlay').classList.remove('open');
   }
 
-  caricaAuto();
+  caricaFilm();
 </script>
 </body>
 </html>
